@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peixaria Umirim - Sistema de Pedidos</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #2980b9;
+            --accent: #27ae60;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            width: 100%;
+            max-width: 500px;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--secondary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        h1 { color: var(--secondary); margin: 0; font-size: 24px; }
+        p.subtitle { color: #666; margin: 5px 0; font-size: 14px; }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .price-preview {
+            background-color: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        button {
+            width: 100%;
+            background-color: var(--accent);
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #219150;
+        }
+
+        .orders-section {
+            margin-top: 30px;
+        }
+
+        .order-card {
+            background: #fff;
+            border-left: 5px solid var(--secondary);
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-geral {
+            font-size: 20px;
+            text-align: right;
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 2px dashed #ccc;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Peixaria Umirim</h1>
+        <p class="subtitle">Qualidade que vem das águas</p>
+    </header>
+
+    <!-- Formulário de Cadastro -->
+    <div class="form-group">
+        <label for="peixe">Selecione o Peixe:</label>
+        <select id="peixe" onchange="calcularPrevisao()">
+            <option value="0" data-price="0">-- Selecione --</option>
+            <option value="Tilápia" data-price="18.50">Tilápia (R$ 18,50/kg)</option>
+            <option value="Tambaqui" data-price="20.00">Tambaqui (R$ 20,00/kg)</option>
+            <option value="Pescada" data-price="25.00">Pescada (R$ 25,00/kg)</option>
+            <option value="Curimatã" data-price="15.00">Curimatã (R$ 15,00/kg)</option>
+            <option value="Camarão" data-price="45.00">Camarão (R$ 45,00/kg)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="peso">Peso (Kg):</label>
+        <input type="number" id="peso" step="0.1" min="0" placeholder="Ex: 1.5" oninput="calcularPrevisao()">
+    </div>
+
+    <div class="price-preview" id="preview">
+        Subtotal: R$ 0,00
+    </div>
+
+    <button onclick="adicionarPedido()">Adicionar ao Pedido</button>
+
+    <!-- Lista de Pedidos -->
+    <div class="orders-section">
+        <h3>Pedidos Atuais</h3>
+        <div id="listaPedidos">
+            <!-- Pedidos aparecerão aqui -->
+        </div>
+        <div class="total-geral" id="totalGeral">
+            Total Geral: R$ 0,00
+        </div>
+    </div>
+</div>
+
+<script>
+    let pedidos = [];
+
+    // Função para calcular o preço enquanto o usuário digita
+    function calcularPrevisao() {
+        const select = document.getElementById('peixe');
+        const peso = document.getElementById('peso').value;
+        const precoKg = select.options[select.selectedIndex].getAttribute('data-price');
+        
+        const subtotal = peso * precoKg;
+        document.getElementById('preview').innerText = `Subtotal: R$ ${subtotal.toFixed(2).replace('.', ',')}`;
+        return subtotal;
+    }
+
+    // Função para adicionar o pedido à lista
+    function adicionarPedido() {
+        const select = document.getElementById('peixe');
+        const peixeNome = select.value;
+        const precoKg = parseFloat(select.options[select.selectedIndex].getAttribute('data-price'));
+        const peso = parseFloat(document.getElementById('peso').value);
+
+        if (peixeNome === "0" || isNaN(peso) || peso <= 0) {
+            alert("Por favor, selecione o peixe e informe o peso corretamente.");
+            return;
+        }
+
+        const subtotal = peso * precoKg;
+
+        const novoPedido = {
+            id: Date.now(),
+            nome: peixeNome,
+            peso: peso,
+            subtotal: subtotal
+        };
+
+        pedidos.push(novoPedido);
+        limparCampos();
+        renderizarPedidos();
+    }
+
+    function limparCampos() {
+        document.getElementById('peixe').value = "0";
+        document.getElementById('peso').value = "";
+        document.getElementById('preview').innerText = "Subtotal: R$ 0,00";
+    }
+
+    function removerPedido(id) {
+        pedidos = pedidos.filter(p => p.id !== id);
+        renderizarPedidos();
+    }
+
+    // Função para atualizar a tela
+    function renderizarPedidos() {
+        const listaElement = document.getElementById('listaPedidos');
+        const totalGeralElement = document.getElementById('totalGeral');
+        listaElement.innerHTML = "";
+        
+        let totalAcumulado = 0;
+
+        pedidos.forEach(p => {
+            totalAcumulado += p.subtotal;
+            listaElement.innerHTML += `
+                <div class="order-card">
+                    <div>
+                        <strong>${p.nome}</strong><br>
+                        <small>${p.peso}kg x R$ ${(p.subtotal/p.peso).toFixed(2)}</small>
+                    </div>
+                    <div>
+                        <span>R$ ${p.subtotal.toFixed(2).replace('.', ',')}</span>
+                        <button class="btn-delete" onclick="removerPedido(${p.id})">X</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        totalGeralElement.innerText = `Total Geral: R$ ${totalAcumulado.toFixed(2).replace('.', ',')}`;
+    }
+</script>
+
+</body>
+</html>
